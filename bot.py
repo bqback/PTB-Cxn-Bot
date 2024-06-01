@@ -1,10 +1,8 @@
 import configparser
 
 from telegram import Update, LinkPreviewOptions
-from telegram.ext import Defaults, ApplicationBuilder, TypeHandler, Application
+from telegram.ext import Defaults, ApplicationBuilder, Application
 from telegram.constants import ParseMode
-
-from components.callbacks import debug
 
 
 async def post_init(_: Application):
@@ -29,9 +27,9 @@ def main():
 
     application.bot_data["owner"] = config["ID"]["owner"]
 
-    application.add_handler(TypeHandler(Update, debug.show_update), group=-1)
+    # application.add_handler(TypeHandler(Update, debug.show_update), group=-1)
 
-    application.run_polling(allowed_updates=Update.ALL_TYPES, close_loop=False)
+    application.run_polling(allowed_updates=Update.ALL_TYPES, close_loop=False, drop_pending_updates=True)
 
 
 if __name__ == "__main__":
