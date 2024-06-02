@@ -1,12 +1,17 @@
 import configparser
 
-from telegram import Update, LinkPreviewOptions
-from telegram.ext import Defaults, ApplicationBuilder, Application
+from telegram import Update, LinkPreviewOptions, ChatMemberOwner
+from telegram.ext import Defaults, ApplicationBuilder, Application, ChatMemberHandler
 from telegram.constants import ParseMode
 
+from components.callbacks import monitoring
 
-async def post_init(_: Application):
-    return
+async def post_init(application: Application):
+    admins = await application.bot.get_chat_administrators(application.bot_data["chat"])
+    actual_admins = list(filter(lambda admin: isinstance(admin, ChatMemberOwner) or admin.can_invite_users, admins))
+    print([admin.user.name for admin in admins])
+    print([admin.user.name for admin in actual_admins])
+    application.bot_data["admins"] = [admin.user.id for admin in actual_admins]
 
 
 def main():
@@ -26,8 +31,11 @@ def main():
     )
 
     application.bot_data["owner"] = config["ID"]["owner"]
+    application.bot_data["chat"] = config["ID"]["chat"]
 
     # application.add_handler(TypeHandler(Update, debug.show_update), group=-1)
+    application.add_handler(ChatMemberHandler(monitoring.admin_promoted, chat_member_types=ChatMemberHandler.CHAT_MEMBER), group=-1)
+    application.add_handler(ChatMemberHandler(monitoring.admin_gone, chat_member_types=ChatMemberHandler.CHAT_MEMBER), group=-1)
 
     application.run_polling(allowed_updates=Update.ALL_TYPES, close_loop=False, drop_pending_updates=True)
 
